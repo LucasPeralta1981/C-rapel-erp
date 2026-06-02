@@ -1,35 +1,37 @@
 {
   "name": "rapel-erp",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
-    "@prisma/client": "^7.8.0",
-    "@react-pdf/renderer": "^4.5.1",
-    "date-fns": "^4.4.0",
+    "next": "14.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "prisma": "^5.7.1",
+    "@prisma/client": "^5.7.1",
     "exceljs": "^4.4.0",
-    "lucide-react": "^1.17.0",
-    "next": "16.2.7",
-    "next-auth": "^4.24.14",
-    "prisma": "^7.8.0",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "uuid": "^14.0.0",
-    "zustand": "^5.0.14"
+    "@react-pdf/renderer": "^3.3.0",
+    "date-fns": "^3.0.6",
+    "lucide-react": "^0.294.0",
+    "zustand": "^4.4.7",
+    "uuid": "^9.0.1",
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.1.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20.19.41",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.7",
-    "tailwindcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/uuid": "^9.0.4",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
     "typescript": "^5"
   }
 }
