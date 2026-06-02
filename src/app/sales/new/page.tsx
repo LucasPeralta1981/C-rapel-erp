@@ -1,21 +1,10 @@
+// src/app/sales/new/page.tsx
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { productos, clientes } from '@/data/mockData';
-import { 
-  Plus, 
-  X, 
-  Save, 
-  Trash2, 
-  ShoppingCart, 
-  Search, 
-  Tag, 
-  Percent, 
-  AlertCircle, 
-  ArrowLeft, 
-  Printer 
-} from 'lucide-react';
+import { Plus, Trash2, ShoppingCart, Search, Tag, Percent, AlertCircle, ArrowLeft, Printer, Save } from 'lucide-react';
 
 interface CarritoItem {
   id: string;
@@ -53,12 +42,12 @@ export default function NewSalePage() {
 
   // --- LÓGICA DE FILTRADO ---
   const sugerenciasCliente = useMemo(() => {
-    if (!clienteInput.trim()) return [];
+    if (!clienteInput) return [];
     return clientes.filter(c => c.nombre.toLowerCase().includes(clienteInput.toLowerCase()));
   }, [clienteInput]);
 
   const sugerenciasProducto = useMemo(() => {
-    if (!productoInput.trim()) return [];
+    if (!productoInput) return [];
     return productos.filter(p => p.nombre.toLowerCase().includes(productoInput.toLowerCase()));
   }, [productoInput]);
 
@@ -72,7 +61,6 @@ export default function NewSalePage() {
     setIndiceSeleccionado(0);
   }, [sugerenciasProducto, productoInput]);
 
-  // Cerrar dropdowns al hacer click afuera
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (clienteRef.current && !clienteRef.current.contains(event.target as Node)) setMostrarCliente(false);
@@ -82,7 +70,7 @@ export default function NewSalePage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Navegación por teclado en la lista de productos
+  // Navegación por teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!mostrarProducto) return;
@@ -126,26 +114,40 @@ export default function NewSalePage() {
   };
 
   const agregarAlCarrito = () => {
-    if (!productoInput.trim()) return;
+    if (!productoInput) return;
     
-    // Buscar producto exacto o por coincidencia
-    const producto = productos.find(p => p.nombre === productoInput || p.nombre.toLowerCase().includes(productoInput.toLowerCase()));
+    const producto = productos.find(p => p.nombre === productoInput);
     if (!producto) return;
 
     if (!validarStock(producto, cantidadInput)) return;
 
-    const subtotal = producto.precio * cantidadInput;
-    const nuevoItem: CarritoItem = {
-      id: `${producto.id}-${Date.now()}`,
-      productoId: producto.id,
-      nombre: producto.nombre,
-      precio: producto.precio,
-      cantidad: cantidadInput,
-      subtotal: subtotal,
-      stock: producto.stock
-    };
-
-    setCarrito([...carrito, nuevoItem]);
+    // Verificar si ya está en el carrito para sumar cantidad
+    const existe = carrito.find(item => item.productoId === producto.id);
+    if (existe) {
+      const nuevaCantidad = existe.cantidad + cantidadInput;
+      if (nuevaCantidad > producto.stock) {
+        setErrorStock(`Stock insuficiente para sumar más. Máximo: ${producto.stock}`);
+        return;
+      }
+      setCarrito(carrito.map(item => 
+        item.productoId === producto.id 
+          ? { ...item, cantidad: nuevaCantidad, subtotal: item.precio * nuevaCantidad }
+          : item
+      ));
+    } else {
+      const subtotal = producto.precio * cantidadInput;
+      const nuevoItem: CarritoItem = {
+        id: `${producto.id}-${Date.now()}`,
+        productoId: producto.id,
+        nombre: producto.nombre,
+        precio: producto.precio,
+        cantidad: cantidadInput,
+        subtotal: subtotal,
+        stock: producto.stock
+      };
+      setCarrito([...carrito, nuevoItem]);
+    }
+    
     setProductoInput('');
     setCantidadInput(1);
     setErrorStock(null);
@@ -175,8 +177,7 @@ export default function NewSalePage() {
     }
 
     setLoading(true);
-    // Simulación de llamada a API
-    await new Promise(r => setTimeout(r, 1000)); 
+    await new Promise(r => setTimeout(r, 1000)); // Simulación de API
     
     const { total } = calcularTotales();
     
@@ -223,7 +224,7 @@ export default function NewSalePage() {
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* COLUMNA IZQUIERDA: CONTROLES (4 columnas) */}
+        {/* COLUMNA IZQUIERDA: CONTROLES */}
         <div className="lg:col-span-4 space-y-4">
           
           {/* 1. Selección de Cliente */}
@@ -358,7 +359,7 @@ export default function NewSalePage() {
 
         </div>
 
-        {/* COLUMNA DERECHA: CARRITO Y RESUMEN (8 columnas) */}
+        {/* COLUMNA DERECHA: CARRITO Y RESUMEN */}
         <div className="lg:col-span-8 flex flex-col h-full">
           <div className="bg-white rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden border border-gray-200 h-[calc(100vh-140px)]">
             
@@ -370,7 +371,7 @@ export default function NewSalePage() {
               </span>
             </div>
 
-            {/* Tabla de Productos */}
+            {/* Tabla de Productos (CARRITO) */}
             <div className="flex-1 overflow-auto p-0">
               {carrito.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-gray-400 p-8">
@@ -380,36 +381,27 @@ export default function NewSalePage() {
                 </div>
               ) : (
                 <table className="w-full text-left border-collapse">
-                  <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
                     <tr>
-                      <th className="p-4 font-semibold text-gray-600 text-sm w-1/2">Producto</th>
-                      <th className="p-4 font-semibold text-gray-600 text-sm text-right">Precio Unit.</th>
-                      <th className="p-4 font-semibold text-gray-600 text-sm text-center">Cant.</th>
-                      <th className="p-4 font-semibold text-gray-600 text-sm text-right">Subtotal</th>
-                      <th className="p-4 font-semibold text-gray-600 text-sm text-center">Acción</th>
+                      <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Producto</th>
+                      <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Cant.</th>
+                      <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Precio Unit.</th>
+                      <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Subtotal</th>
+                      <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center w-10">Acción</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-100">
                     {carrito.map((item) => (
-                      <tr key={item.id} className="hover:bg-blue-50 transition group">
-                        <td className="p-4">
-                          <div className="font-semibold text-gray-800">{item.nombre}</div>
-                          <div className="text-xs text-gray-500">ID: {item.productoId}</div>
-                        </td>
-                        <td className="p-4 text-right font-medium text-gray-700">${item.precio.toLocaleString()}</td>
+                      <tr key={item.id} className="hover:bg-gray-50 transition">
+                        <td className="p-4 font-medium text-gray-800">{item.nombre}</td>
+                        <td className="p-4 text-center text-gray-600">{item.cantidad}</td>
+                        <td className="p-4 text-right text-gray-600">${item.precio.toLocaleString()}</td>
+                        <td className="p-4 text-right font-bold text-gray-800">${item.subtotal.toLocaleString()}</td>
                         <td className="p-4 text-center">
-                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold text-sm">
-                            {item.cantidad}
-                          </span>
-                        </td>
-                        <td className="p-4 text-right font-bold text-green-700 text-lg">
-                          ${item.subtotal.toLocaleString()}
-                        </td>
-                        <td className="p-4 text-center">
-                          <button 
+                          <button
                             onClick={() => eliminarDelCarrito(item.id)}
-                            className="bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg transition opacity-0 group-hover:opacity-100 focus:opacity-100"
-                            title="Eliminar ítem"
+                            className="text-red-400 hover:text-red-600 transition p-1 rounded hover:bg-red-50"
+                            title="Eliminar"
                           >
                             <Trash2 size={18} />
                           </button>
@@ -421,48 +413,37 @@ export default function NewSalePage() {
               )}
             </div>
 
-            {/* Footer con Totales y Botón de Guardar */}
-            <div className="bg-gray-50 border-t p-6 shrink-0">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                
-                {/* Resumen de Totales */}
-                <div className="w-full md:w-1/2 space-y-2">
-                  <div className="flex justify-between text-gray-600">
-                    <span>Subtotal:</span>
-                    <span className="font-medium">${subtotal.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-yellow-600">
-                    <span>Descuento ({descuento}%):</span>
-                    <span className="font-medium">-${descuentoMonto.toLocaleString()}</span>
-                  </div>
-                  <div className="border-t border-gray-300 my-2"></div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold text-gray-800">Total a Pagar:</span>
-                    <span className="text-2xl font-bold text-green-700">${total.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                {/* Botón de Acción Principal */}
-                <div className="w-full md:w-auto">
-                  <button
-                    onClick={handleGuardar}
-                    disabled={loading || carrito.length === 0}
-                    className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition flex items-center justify-center gap-3 transform hover:-translate-y-1"
-                  >
-                    {loading ? (
-                      <>Procesando...</>
-                    ) : (
-                      <>
-                        <Save size={24} />
-                        <span>Guardar {tipo}</span>
-                      </>
-                    )}
-                  </button>
-                  {carrito.length === 0 && (
-                    <p className="text-xs text-red-500 mt-2 text-center">Agrega productos para continuar</p>
-                  )}
-                </div>
+            {/* Footer: Resumen Total y Botón Guardar */}
+            <div className="bg-gray-50 p-6 border-t shrink-0">
+              <div className="flex justify-between items-center mb-4 text-sm">
+                <span className="text-gray-500">Subtotal:</span>
+                <span className="font-medium text-gray-800">${subtotal.toLocaleString()}</span>
               </div>
+              {descuento > 0 && (
+                <div className="flex justify-between items-center mb-2 text-sm">
+                  <span className="text-gray-500">Descuento ({descuento}%):</span>
+                  <span className="font-medium text-red-600">-${descuentoMonto.toLocaleString()}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-lg font-bold text-gray-700">TOTAL A PAGAR:</span>
+                <span className="text-3xl font-bold text-blue-700">${total.toLocaleString()}</span>
+              </div>
+
+              <button
+                onClick={handleGuardar}
+                disabled={loading || carrito.length === 0 || !clienteInput}
+                className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-lg shadow-lg transition flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>Procesando...</>
+                ) : (
+                  <>
+                    <Save size={24} />
+                    {tipo === 'Venta' ? 'Finalizar Venta' : 'Guardar Presupuesto'}
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
