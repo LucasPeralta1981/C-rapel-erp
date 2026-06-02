@@ -1,82 +1,51 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { DollarSign, Package, Users, TrendingUp } from 'lucide-react';
-
-// Local fallback for formatCurrency to avoid relying on external module
-function formatCurrency(value: number) {
-  try {
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(value);
-  } catch {
-    return `$${value}`;
-  }
-}
+import { formatCurrency } from '@/lib/utils';
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({ sales: 0, products: 0, clients: 0, lowStock: 0 });
+  const [stats, setStats] = useState({
+    sales: 0,
+    products: 0,
+    clients: 0,
+    lowStock: 0
+  });
 
   useEffect(() => {
-    // Simulación de carga de datos (en producción llamarías a tus APIs)
-    Promise.all([
-      fetch('/api/sales').then(r => r.json()).then(data => data.reduce((acc: number, curr: any) => acc + Number(curr.total), 0) || 0),
-      fetch('/api/products').then(r => r.json()).then(data => data.length),
-      fetch('/api/entities').then(r => r.json()).then(data => data.length),
-      fetch('/api/products').then(r => r.json()).then(data => data.filter((p: any) => p.stock <= p.minStock).length)
-    ]).then(([sales, products, clients, lowStock]) => {
-      setStats({ sales, products, clients, lowStock });
-    }).catch(() => {
-      // Fallback por si las APIs no están listas aún
-      setStats({ sales: 150000, products: 120, clients: 45, lowStock: 3 });
+    // Simulación de datos
+    setStats({
+      sales: 125000,
+      products: 450,
+      clients: 120,
+      lowStock: 15
     });
   }, []);
 
+  const statCards = [
+    { icon: DollarSign, label: 'Ventas Totales', value: stats.sales, color: 'text-green-600', bg: 'bg-green-50' },
+    { icon: Package, label: 'Productos', value: stats.products, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { icon: Users, label: 'Clientes', value: stats.clients, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { icon: TrendingUp, label: 'Stock Bajo', value: stats.lowStock, color: 'text-red-600', bg: 'bg-red-50' },
+  ];
+
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-slate-800 mb-6">Panel de Control - R.A.P.E.L</h1>
-      
+    <div>
+      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-500 font-medium">Ventas Hoy</h3>
-            <DollarSign className="text-green-600" />
+        {statCards.map((card, index) => (
+          <div key={index} className={`${card.bg} rounded-lg p-6 border border-gray-200`}>
+            <div className="flex items-center justify-between mb-4">
+              <card.icon className={`w-8 h-8 ${card.color}`} />
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{
+              card.label === 'Stock Bajo' 
+                ? card.value 
+                : formatCurrency(card.value)
+            }</p>
+            <p className="text-gray-600 mt-2">{card.label}</p>
           </div>
-          <p className="text-2xl font-bold text-slate-800">{formatCurrency(stats.sales)}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-500 font-medium">Productos</h3>
-            <Package className="text-blue-600" />
-          </div>
-          <p className="text-2xl font-bold text-slate-800">{stats.products}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-500 font-medium">Clientes</h3>
-            <Users className="text-purple-600" />
-          </div>
-          <p className="text-2xl font-bold text-slate-800">{stats.clients}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-500 font-medium">Stock Bajo</h3>
-            <TrendingUp className="text-red-600" />
-          </div>
-          <p className="text-2xl font-bold text-red-600">{stats.lowStock}</p>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-xl font-bold mb-4 text-slate-800">Bienvenido, Lucas</h2>
-        <p className="text-gray-600">
-          Estás listo para vender. Recuerda:
-        </p>
-        <ul className="list-disc pl-5 mt-2 text-gray-600 space-y-1">
-          <li>Ve a <strong>Punto de Venta</strong> para registrar una nueva venta.</li>
-          <li>Usa <strong>Importar Excel</strong> para actualizar precios de EMTOP/SHELL/DUNLOP.</li>
-          <li>Revisa las alertas de <strong>Stock Bajo</strong> antes de vender.</li>
-        </ul>
+        ))}
       </div>
     </div>
   );
