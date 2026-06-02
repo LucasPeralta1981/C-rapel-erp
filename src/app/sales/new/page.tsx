@@ -41,17 +41,18 @@ export default function NewSalePage() {
 
     setLoading(true);
 
-    const { total } = calcularTotales();
-    const registro = {
-      clienteNombre: clienteInput,
-      total: total,
-      items: carrito,
-      itemsCount: carrito.length,
-      estado: tipo === 'Presupuesto' ? 'Pendiente' : 'Convertido',
-      tipoVenta: tipo
-    };
-
     try {
+      const { subtotal, descuentoMonto, total } = calcularTotales();
+      const registro = {
+        cliente: clienteInput,
+        tipo,
+        carrito,
+        subtotal,
+        descuento: descuentoMonto,
+        total,
+        fecha: new Date().toISOString(),
+      };
+
       const response = await fetch('/api/sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,8 +62,7 @@ export default function NewSalePage() {
       if (!response.ok) throw new Error('Error al guardar');
 
       alert(`✅ ${tipo} guardada exitosamente!\n\nCliente: ${clienteInput}\nTotal: $${total.toLocaleString()}`);
-      
-      // Limpiar carrito y redirigir
+
       setCarrito([]);
       setClienteInput('');
       setProductoInput('');
@@ -471,16 +471,6 @@ export default function NewSalePage() {
                     <Save size={24} />
                     {tipo === 'Venta' ? 'Finalizar Venta' : 'Guardar Presupuesto'}
                   </>
-
-
-
-
-
-
-
-
-
-
                 )}
               </button>
             </div>
