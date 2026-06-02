@@ -1,4 +1,34 @@
- npm run dev
+ export default function Sidebar() {
+  return (
+    <aside className="w-64 bg-slate-900 text-white min-h-screen">
+      <div className="p-4">
+        <h2 className="text-lg font-bold mb-4">Sidebar</h2>
+        <ul className="space-y-2">
+          <li>
+            <a href="/" className="block rounded px-3 py-2 hover:bg-slate-800">
+              Dashboard
+            </a>
+          </li>
+          <li>
+            <a href="/clients" className="block rounded px-3 py-2 hover:bg-slate-800">
+              Clients
+            </a>
+          </li>
+          <li>
+            <a href="/products" className="block rounded px-3 py-2 hover:bg-slate-800">
+              Products
+            </a>
+          </li>
+          <li>
+            <a href="/sales" className="block rounded px-3 py-2 hover:bg-slate-800">
+              Sales
+            </a>
+          </li>
+        </ul>
+      </div>
+    </aside>
+  );
+}
 
 > rapel-erp@1.0.0 dev
 > next dev

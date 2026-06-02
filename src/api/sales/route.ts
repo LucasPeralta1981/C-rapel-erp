@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../../lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(req: NextRequest) {
@@ -115,7 +115,7 @@ export async function GET(req: NextRequest) {
         address: sale.client.address,
         type: sale.client.type
       },
-      items: sale.items.map(item => ({
+      items: sale.items.map((item: any) => ({
         sku: item.product.sku,
         name: item.product.name,
         qty: item.quantity,

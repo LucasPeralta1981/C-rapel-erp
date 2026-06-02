@@ -1,7 +1,15 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { DollarSign, Package, Users, TrendingUp } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+
+// Local fallback for formatCurrency to avoid relying on external module
+function formatCurrency(value: number) {
+  try {
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(value);
+  } catch {
+    return `$${value}`;
+  }
+}
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ sales: 0, products: 0, clients: 0, lowStock: 0 });
