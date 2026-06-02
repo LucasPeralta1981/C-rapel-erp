@@ -27,6 +27,56 @@ export default function NewSalePage() {
   const [tipo, setTipo] = useState<'Venta' | 'Presupuesto'>('Venta');
   const [carrito, setCarrito] = useState<CarritoItem[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // --- FUNCIONES ---
+  const handleGuardar = async () => {
+    if (!clienteInput) {
+      alert("Selecciona un cliente.");
+      return;
+    }
+    if (carrito.length === 0) {
+      alert("El carrito está vacío.");
+      return;
+    }
+
+    setLoading(true);
+
+    const { total } = calcularTotales();
+    const registro = {
+      clienteNombre: clienteInput,
+      total: total,
+      items: carrito,
+      itemsCount: carrito.length,
+      estado: tipo === 'Presupuesto' ? 'Pendiente' : 'Convertido',
+      tipoVenta: tipo
+    };
+
+    try {
+      const response = await fetch('/api/sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(registro),
+      });
+
+      if (!response.ok) throw new Error('Error al guardar');
+
+      alert(`✅ ${tipo} guardada exitosamente!\n\nCliente: ${clienteInput}\nTotal: $${total.toLocaleString()}`);
+      
+      // Limpiar carrito y redirigir
+      setCarrito([]);
+      setClienteInput('');
+      setProductoInput('');
+      setCantidadInput(1);
+      setDescuento(0);
+      
+      router.push('/sales'); // O a la lista de presupuestos si prefieres
+    } catch (error) {
+      console.error(error);
+      alert('❌ Error al guardar. Revisa la consola.');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Estados de UI
   const [mostrarCliente, setMostrarCliente] = useState(false);
@@ -165,28 +215,7 @@ export default function NewSalePage() {
     return { subtotal, descuentoMonto, total };
   };
 
-  const handleGuardar = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!clienteInput) {
-      alert("Selecciona un cliente.");
-      return;
-    }
-    if (carrito.length === 0) {
-      alert("El carrito está vacío.");
-      return;
-    }
 
-    setLoading(true);
-    await new Promise(r => setTimeout(r, 1000)); // Simulación de API
-    
-    const { total } = calcularTotales();
-    
-    // Aquí iría la lógica real de guardado en BD
-    alert(`✅ ${tipo} guardada exitosamente!\n\nCliente: ${clienteInput}\nTotal: $${total.toLocaleString()}`);
-    
-    setLoading(false);
-    router.push('/sales');
-  };
 
   const { subtotal, descuentoMonto, total } = calcularTotales();
 
@@ -442,6 +471,16 @@ export default function NewSalePage() {
                     <Save size={24} />
                     {tipo === 'Venta' ? 'Finalizar Venta' : 'Guardar Presupuesto'}
                   </>
+
+
+
+
+
+
+
+
+
+
                 )}
               </button>
             </div>
@@ -449,5 +488,6 @@ export default function NewSalePage() {
         </div>
       </main>
     </div>
+
   );
 }
