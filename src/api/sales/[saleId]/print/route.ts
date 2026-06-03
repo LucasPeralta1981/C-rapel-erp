@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { PDFDocument, StandardFonts } from '@react-pdf/renderer'; // Nota: En Next.js Serverless, a veces es mejor generar el buffer directamente
+import React from 'react';
+import { renderToStream } from '@react-pdf/renderer';
+
+// Nota: En Next.js Serverless, a veces es mejor generar el buffer directamente
 // Para simplificar en este entorno, usaremos una ruta que renderiza el PDF como buffer si se configurara, 
 // pero dado que usamos @react-pdf/renderer en el cliente, haremos un truco:
 // Devolvemos los datos y el frontend usa ReactPDF.renderToStream o similar.
@@ -10,7 +13,6 @@ import { PDFDocument, StandardFonts } from '@react-pdf/renderer'; // Nota: En Ne
 // OPCIÓN SENCILLA Y ROBUSTA PARA PRODUCCIÓN RÁPIDA:
 // Redirigimos a una página de visualización de PDF generada por el cliente.
 // Pero si necesitas el PDF directo:
-import { renderToStream } from '@react-pdf/renderer';
 import { InvoicePDF } from '@/components/documents/InvoicePDF';
 
 export async function GET(req: NextRequest, { params }: { params: { saleId: string } }) {
@@ -29,7 +31,7 @@ export async function GET(req: NextRequest, { params }: { params: { saleId: stri
     if (!sale) return NextResponse.json({ error: 'No found' }, { status: 404 });
 
     // 2. Preparar datos para el PDF
-    const subtotal = sale.items.reduce((sum, item) => sum + Number(item.subtotal), 0);
+    const subtotal = sale.items.reduce((sum: number, item: (typeof sale.items)[number]) => sum + Number(item.subtotal), 0);
     const tax = subtotal * 0.21;
     const total = subtotal + tax;
 
@@ -56,7 +58,7 @@ export async function GET(req: NextRequest, { params }: { params: { saleId: stri
     };
 
     // 3. Renderizar PDF como Stream
-    const stream = await renderToStream(<InvoicePDF data={data} />);
+    const stream = await renderToStream(React.createElement(InvoicePDF, { data } as any) as any);
     
     return new NextResponse(stream as any, {
       headers: {
