@@ -10,19 +10,20 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@prisma/client": "^5.7.1",
+    "@react-pdf/renderer": "^3.3.0",
+    "clsx": "^2.0.0",
+    "date-fns": "^3.0.6",
+    "exceljs": "^4.4.0",
+    "lucide-react": "^0.294.0",
+    "mongodb": "^7.2.0",
     "next": "14.0.4",
+    "prisma": "^5.7.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "prisma": "^5.7.1",
-    "@prisma/client": "^5.7.1",
-    "exceljs": "^4.4.0",
-    "@react-pdf/renderer": "^3.3.0",
-    "date-fns": "^3.0.6",
-    "lucide-react": "^0.294.0",
-    "zustand": "^4.4.7",
+    "tailwind-merge": "^2.1.0",
     "uuid": "^9.0.1",
-    "clsx": "^2.0.0",
-    "tailwind-merge": "^2.1.0"
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
     "@types/node": "^20",
