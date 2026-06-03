@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS='--dns-result-order=ipv4first --dns-servers=8.8.8.8 --dns-servers=8.8.4.4' next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
+      "dev": "set NODE_OPTIONS=--dns-result-order=ipv4first --dns-servers=8.8.8.8 --dns-servers=8.8.4.4 && next dev",
+      "build": "next build",
+      "start": "next start",
+      "lint": "next lint"
+    },
   "dependencies": {
     "@prisma/client": "^5.7.1",
     "@react-pdf/renderer": "^3.3.0",
