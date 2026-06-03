@@ -1,40 +1,35 @@
-// src/lib/mongodb.ts
-import { MongoClient, Db } from 'mongodb';
+  import mongoose from 'mongoose';
 
-if (!process.env.MONGODB_URI) {
-  throw new Error('❌ Falta MONGODB_URI en el archivo .env');
-}
+    if (!process.env.MONGODB_URI) {
+      throw new Error('Please add your Mongo URI to .env.local');
+    }
 
-const uri = process.env.MONGODB_URI;
-const options = {};
+    const MONGODB_URI = process.env.MONGODB_URI;
 
-let client: MongoClient;
-let clientPromise: Promise<MongoClient>;
+    declare global {
+      var mongoose: { conn: any; promise: any };
+    }
 
-if (process.env.NODE_ENV === 'development') {
-  // Reutilizar conexión en desarrollo
-  let globalWithMongo = global as typeof globalThis & { _mongoClientPromise?: Promise<MongoClient> };
+    if (!global.mongoose) {
+      global.mongoose = { conn: null, promise: null };
+    }
 
-  if (!globalWithMongo._mongoClientPromise) {
-    client = new MongoClient(uri, options);
-    globalWithMongo._mongoClientPromise = client.connect().catch(err => {
-      console.error('❌ Error de conexión a MongoDB:', err.message);
-      throw err;
-    });
-  }
-  clientPromise = globalWithMongo._mongoClientPromise;
-} else {
-  // Conexión en producción
-  client = new MongoClient(uri, options);
-  clientPromise = client.connect().catch(err => {
-    console.error('❌ Error de conexión a MongoDB:', err.message);
-    throw err;
-  });
-}
+    async function getDb() {
+      if (global.mongoose.conn) {
+        return global.mongoose.conn;
+      }
 
-export default clientPromise;
+      if (!global.mongoose.promise) {
+        global.mongoose.promise = mongoose.connect(MONGODB_URI, {
+          serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+          socketTimeoutMS: 45000,
+        }).then((mongoose) => {
+          return mongoose;
+        });
+      }
 
-export async function getDb(): Promise<Db> {
-  const client = await clientPromise;
-  return client.db('ventas_db'); // El nombre de tu base de datos
-}
+      global.mongoose.conn = await global.mongoose.promise;
+      return global.mongoose.conn;
+    }
+
+    export default getDb;
